@@ -1,0 +1,16 @@
+{
+  "name" : "HTTP::Body",
+  "source-url" : "",
+  "perl" : "v6",
+  "build-depends" : [ ],
+  "provides" : {
+    "HTTP::Body" : "lib/HTTP/Body.pm6"
+  },
+  "depends" : [ ],
+  "description" : "blah blah blah",
+  "test-depends" : [ ],
+  "version" : "*",
+  "authors" : [
+    "moznion"
+  ]
+}
