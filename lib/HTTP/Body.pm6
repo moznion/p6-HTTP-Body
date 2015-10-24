@@ -60,10 +60,14 @@ method new(Str $content-type, $content-length) {
     my $backend = %@TYPES{ $type || 'application/octet-stream' };
 
     require ::($backend);
+    return ::($backend).init($backend, $content-type, $content-length);
+}
+
+method init(Str $backend, Str $content-type, $content-length) {
     return ::($backend).bless(
         :chunked(!$content-length.defined),
         :content-length($content-length.defined ?? $content-length !! -1),
-        :content-type($content-type||'hoge'),
+        :content-type($content-type),
     );
 }
 
