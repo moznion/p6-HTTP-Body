@@ -10,6 +10,7 @@ method spin() {
 
     if my $length = $.buffer.elems {
         self.body.write($.buffer.subbuf(0, $length));
+        $.buffer($.buffer.subbuf($length));
     }
 
     if self.length === self.content-length {

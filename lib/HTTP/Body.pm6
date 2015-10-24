@@ -71,15 +71,16 @@ method add(Blob $content is copy) {
     if $!chunked {
         $!chunk-buffer ~= $content;
 
-        while $!chunk-buffer ~~ /^ $<chunk-len-hex> = <[0..9 a..f A..F]>+ .* \x0D \x0A / {
+        while $!chunk-buffer.decode ~~ /^ $<chunk-len-hex> = <[0..9 a..f A..F]>+ .*? \x0D \x0A / {
             my Int $chunk-len = :16($<chunk-len-hex>.Str);
 
             if $chunk-len === 0 {
                 # Strip chunk len
-                $!chunk-buffer ~~ s/^ <[0..9 a..f A..F]>+ .* \x0D \x0A //;
+                my $cb = $!chunk-buffer.decode;
+                $cb ~~ s/^ <[0..9 a..f A..F]>+ .*? \x0D \x0A //;
 
                 # End of data, there may be trailing headers
-                if $!chunk-buffer ~~ / $<headers> = .* \x0D \x0A / {
+                if $cb ~~ / $<headers> = .*? \x0D \x0A / {
                     if my $message = HTTP::Message.new.parse($<headers>.Str) {
                         $!trailing-headers = $message.header;
                     }
@@ -94,13 +95,18 @@ method add(Blob $content is copy) {
                 # Make sure we have the whole chunk in the buffer (+CRLF)
                 if $!chunk-buffer.elems >= $chunk-len {
                     # Strip chunk len
-                    $!chunk-buffer ~~ s/^ <[0..9 a..f A..F]>+ .* \x0D \x0A //;
+                    my $cb = $!chunk-buffer.decode;
+                    $cb ~~ s/^ <[0..9 a..f A..F]>+ .*? \x0D \x0A //;
 
                     # Pull chunk data out of chunk buffer into real buffer
-                    $!buffer ~= $!chunk-buffer.subbuf(0, $chunk-len);
+                    my $cb-enc = $cb.encode;
+                    $!buffer ~= $cb-enc.subbuf(0, $chunk-len);
+                    $cb = $cb-enc.subbuf($chunk-len).decode;
 
                     # Strip remaining CRLF
-                    $!chunk-buffer ~~ s/^ \x0D \x0A //;
+                    $cb ~~ s/^ \x0D \x0A //;
+
+                    $!chunk-buffer = $cb.encode;
 
                     $!length += $chunk-len;
                 }
@@ -130,7 +136,7 @@ method add(Blob $content is copy) {
 
     $!buffer ~= $content;
 
-    unless $!state === DONE {
+    if $!state !== DONE {
         self.spin;
     }
 
@@ -254,8 +260,13 @@ method param-order() {
     return @!param-order;
 }
 
-method buffer() {
+multi method buffer() {
     return $!buffer;
+}
+
+multi method buffer(Blob $buffer) {
+    $!buffer = $buffer;
+    return self.buffer;
 }
 
 =begin pod
