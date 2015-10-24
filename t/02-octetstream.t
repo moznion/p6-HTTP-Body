@@ -8,7 +8,7 @@ my $path = "$*CWD/t/data/octetstream";
 for 1..3 -> $i {
     my $test = sprintf("%03d", $i);
 
-    my $headers = from-json((open("$path/$test\-headers.json", :bin)).slurp-rest);
+    my $headers = from-json(open("$path/$test\-headers.json", :bin).slurp-rest);
     my $results = open("$path/$test\-results.dat", :bin).slurp-rest;
     my $content = open("$path/$test\-content.dat", :bin);
 

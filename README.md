@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/moznion/p6-HTTP-Body.svg?branch=master)](https://travis-ci.org/moznion/p6-HTTP-Body)
+
 NAME
 ====
 

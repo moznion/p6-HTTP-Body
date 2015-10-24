@@ -1,14 +1,22 @@
 {
   "name" : "HTTP::Body",
-  "source-url" : "",
+  "source-url" : "git://github.com/moznion/p6-HTTP-Body",
   "perl" : "v6",
   "build-depends" : [ ],
   "provides" : {
-    "HTTP::Body" : "lib/HTTP/Body.pm6"
+    "HTTP::Body" : "lib/HTTP/Body.pm6",
+    "HTTP::Body::OctetStream" : "lib/HTTP/Body/OctetStream.pm6",
+    "HTTP::Body::UrlEncoded" : "lib/HTTP/Body/UrlEncoded.pm6"
   },
-  "depends" : [ ],
+  "depends" : [
+    "HTTP::UserAgent",
+    "File::Temp"
+  ],
   "description" : "blah blah blah",
-  "test-depends" : [ ],
+  "test-depends" : [
+    "JSON::Fast",
+    "Digest::MD5"
+  ],
   "version" : "*",
   "authors" : [
     "moznion"

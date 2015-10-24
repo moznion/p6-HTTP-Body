@@ -36,7 +36,7 @@ has %!part-data = {};
 has STATE $!state = BUFFERING;
 has $!tmpdir = tempdir;
 
-has HTTP::Header $!trailing-headers;
+has HTTP::Header $!trailing-headers = HTTP::Header.new;
 
 submethod BUILD(:$chunked, :$content-length, :$content-type) {
     $!chunked        = $chunked;
@@ -50,8 +50,8 @@ method new(Str $content-type, $content-length) {
 
     for @TYPES -> $TYPE {
         my $supported = $TYPE.key;
-        my $index = index($content-type.lc, $supported) || -1;
-        if $index >= 0 && (!$earliest-index.defined || $index < $earliest-index) {
+        my $index = index($content-type.lc, $supported);
+        if $index.defined && (!$earliest-index.defined || $index < $earliest-index) {
             $type           = $supported;
             $earliest-index = $index;
         }
@@ -81,8 +81,13 @@ method add(Blob $content is copy) {
 
                 # End of data, there may be trailing headers
                 if $cb ~~ / $<headers> = .*? \x0D \x0A / {
-                    if my $message = HTTP::Message.new.parse($<headers>.Str) {
-                        $!trailing-headers = $message.header;
+                    my ($k, $v) = $<headers>.Str.split(/':'\s*/, 2);
+                    if $k && $v {
+                        if $.trailing-headers.field($k) {
+                            $.trailing-headers.push-field: |($k => $v.split(',')>>.trim);
+                        } else {
+                            $.trailing-headers.field: |($k => $v.split(',')>>.trim);
+                        }
                     }
                 }
 
@@ -130,7 +135,7 @@ method add(Blob $content is copy) {
 
     # Don't allow buffer data to exceed content-length
     if $!length > $content-length {
-        $content = $content.subbuf(0, $content-length - $!length);
+        $content = $content.subbuf(0, $content.elems + ($content-length - $!length));
         $!length = $content-length;
     }
 
@@ -200,10 +205,10 @@ multi method param() {
 
 multi method param(Str $name, Str $value) {
     if (my $param = %!param{$name}).defined {
-        for $param -> $p {
-            $p = [$p] if $p !~~ List;
-            $p.push($value);
+        if $param !~~ List {
+            %!param{$name} = [$param];
         }
+        @(%!param{$name}).push($value);
     } else {
         %!param{$name} = $value;
     }
