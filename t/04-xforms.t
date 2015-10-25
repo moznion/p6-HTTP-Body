@@ -22,7 +22,7 @@ for 2..2 -> $i {
     for %($body.upload).pairs -> $pair {
         my $value = $pair.value;
         for ($value ~~ List ?? @$value !! $value ) {
-            @temps.push($_<tempname>.delete);
+            @temps.push($_<tempname>:delete);
         }
     }
 
@@ -30,7 +30,7 @@ for 2..2 -> $i {
     is-deeply($body.param, %results<param>, "$test XForms param");
 	is-deeply($body.param-order, %results<param_order> ?? %results<param_order> !! [], "$test XForms param_order");
     is-deeply($body.upload, %results<upload>, "$test XForms upload");
-    # if ($body->isa('HTTP::Body::XFormsMultipart')) {
+    # if ($body->isa('HTTP::Body::XFormsMultiPart')) {
     #     cmp_ok( $body->start, 'eq', $results->{start}, "$test XForms start" );
     # }
     # else {

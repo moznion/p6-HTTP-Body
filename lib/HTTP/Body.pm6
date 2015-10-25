@@ -3,13 +3,13 @@ use File::Temp;
 use HTTP::Header;
 unit class HTTP::Body;
 
-enum STATE <BUFFERING DONE>;
+enum STATE <BUFFERING DONE PREAMBLE BOUNDARY HEADER BODY>;
 
 my Pair constant @TYPES = (
     'application/octet-stream'          => 'HTTP::Body::OctetStream',
     'application/x-www-form-urlencoded' => 'HTTP::Body::UrlEncoded',
     'multipart/form-data'               => 'HTTP::Body::MultiPart',
-    'multipart/related'                 => 'HTTP::Body::XFormsMultipart',
+    'multipart/related'                 => 'HTTP::Body::XFormsMultiPart',
     'application/xml'                   => 'HTTP::Body::XForms',
     'application/json'                  => 'HTTP::Body::OctetStream',
 );
@@ -212,7 +212,7 @@ multi method param(Str $name, Str $value) {
         if $param !~~ List {
             %!param{$name} = [$param];
         }
-        @(%!param{$name}).push($value);
+        %!param{$name}.push($value);
     } else {
         %!param{$name} = $value;
     }
@@ -226,14 +226,14 @@ multi method upload() {
     return %!upload;
 }
 
-multi method upload(Str $name, $upload) {
-    if (my $_upload = %!upload{$name}).defined {
-        for $_upload -> $u {
-            $u = [$u] if $u !~~ List;
-            $u.push($upload);
+multi method upload(Str $name, %upload) {
+    if (my $named = %!upload{$name}).defined {
+        if $named !~~ List {
+            %!upload{$name} = [$named];
         }
+        %!upload{$name}.push(%upload);
     } else {
-        %!upload{$name} = $upload;
+        %!upload{$name} = %upload;
     }
 
     return self.upload;
@@ -243,14 +243,14 @@ multi method part-data() {
     return %!part-data;
 }
 
-multi method part-data(Str $name, $data) {
+multi method part-data(Str $name, %data) {
     if (my $part-data = %!part-data{$name}).defined {
-        for $part-data -> $p {
-            $p = [$p] if $p !~~ List;
-            $p.push($data);
+        if $part-data !~~ List {
+            %!part-data{$name} = [$part-data];
         }
+        %!part-data{$name}.push(%data);
     } else {
-        %!part-data{$name} = $data;
+        %!part-data{$name} = %data;
     }
 
     return self.part-data;
