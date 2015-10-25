@@ -110,12 +110,11 @@ method parse-header() returns Bool {
         $field ~~ s:g/\b (\w)/{$0.uc}/;
 
         my %part = self.part;
-        if %part<headers>{$field}.defined {
-            for %part<headers>{$field} {
-                warn 'HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH';
-            #     $_ = [$_] unless $_ !~~ List;
-            #     # push( @$_, $header );
+        if (my $header-value = %part<headers>{$field}).defined {
+            if $header-value !~~ List {
+                %part<headers>{$field} = [$header-value];
             }
+            %part<headers>{$field}.push($header);
         } else {
             %part<headers>{$field} = $header;
         }
